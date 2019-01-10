@@ -1,0 +1,8 @@
+language: c
+os: osx
+osx_image: xcode7.3
+
+script:
+  - cd src 
+  - make full
+  - ls -al haribote.img

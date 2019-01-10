@@ -1,0 +1,7 @@
+opt imgin:../z_tools/hrb_qemu/haribote.img
+
+/*
+copy from:hello.hrb		to:@:
+*/
+
+opt imgout:../z_tools/qemu/fdimage0.bin

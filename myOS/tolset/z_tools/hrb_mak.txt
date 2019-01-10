@@ -1,0 +1,89 @@
+TOOLPATH = ../z_tools/
+RULEFILE = ../z_tools/haribote/haribote.rul
+MAKE     = $(TOOLPATH)make.exe -r
+SJISCONV = $(TOOLPATH)sjisconv.exe -s
+CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) $(CC1OPT) -Os -Wall -quiet
+GAS2NASK = $(TOOLPATH)gas2nask.exe -a
+NASK     = $(TOOLPATH)nask.exe
+OBJ2BIM  = $(TOOLPATH)obj2bim.exe
+BIM2HRB  = $(TOOLPATH)bim2hrb.exe
+BIM2BIN  = $(TOOLPATH)bim2bin.exe
+CPP0     = $(TOOLPATH)cpp0.exe -P -I$(INCPATH)
+ASKA     = $(TOOLPATH)aska.exe
+NASKCNV  = $(TOOLPATH)naskcnv0.exe -l -s -w
+GOLIB    = $(TOOLPATH)golib00.exe
+LINK     = $(TOOLPATH)ld.exe -s -Bdynamic --stack $(STACKSIZE)
+EDIMG    = $(TOOLPATH)edimg.exe
+SARTOL   = $(TOOLPATH)sartol.exe
+DELE     = del
+COPY     = copy
+
+LIBPATH  = $(INCPATH)
+LIBS     = $(LIBPATH)w32clibc.lib $(LIBPATH)golibc.lib $(LIBPATH)libmingw.lib
+
+# 以上の項目はあなたのディレクトリ構成にあわせて書き換える
+
+# デフォルト動作
+
+default :
+	$(MAKE) $(TARGET).$(MODE)
+
+# 一般規則
+
+%.ca : %.c Makefile
+	$(SJISCONV) $*.c $*.ca
+
+%.gas : %.ca Makefile
+	$(CC1) -o $*.gas $*.ca
+
+%.nas : %.gas Makefile
+	$(GAS2NASK) $*.gas $*.nas
+
+%.obj : %.nas Makefile
+	$(NASK) $*.nas $*.obj $*.lst
+
+%.ias : %.ask Makefile
+	$(CPP0) -o $*.ias $*.ask
+
+%.3as : %.ias Makefile
+	$(ASKA) $*.ias $*.3as
+
+%.lst : %.nas Makefile
+	$(NASK) $*.nas $*.obj $*.lst
+
+# ファイル生成規則
+
+$(TARGET).bim : $(OBJS) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:$(TARGET).bim map:$(TARGET).map \
+		stack:$(STACKSIZE) $(OBJS) $(INCPATH)apilib.lib
+
+%.org : %.bim Makefile
+	$(BIM2HRB) $*.bim $*.org $(MALLOCSIZE) $(BIMOPT0)
+
+%.hrb : %.org Makefile
+	$(BIM2BIN) -osacmp in:$*.org out:$*.hrb $(BIMOPT1)
+
+$(TARGET).lib : $(OBJS) Makefile
+	$(GOLIB) out:$@ $(OBJS)
+
+$(TARGET).exe : $(OBJS) Makefile
+	$(LINK) -o $(TARGET).exe -Map $(TARGET).map $(OBJS) $(LIBS)
+
+# コマンド
+
+run :
+	$(MAKE) $(TARGET).$(MODE)
+	$(EDIMG) imgin:$(TOOLPATH)hrb_qemu/haribote.img 	\
+		copy from:$(TARGET).$(MODE) to:@:				\
+		imgout:$(TOOLPATH)qemu/fdimage0.bin
+	$(MAKE) -C $(TOOLPATH)qemu
+
+clean :
+	-$(DELE) *.obj
+	-$(DELE) $(TARGET).bim
+	-$(DELE) $(TARGET).map
+	-$(DELE) $(TARGET).org
+
+src_only :
+	$(MAKE) clean
+	-$(DELE) $(TARGET).$(MODE)
