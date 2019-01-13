@@ -1,0 +1,10 @@
+1、最开始，是由一个二进制文件做出来的OS；
+2、现在做的OS和最开始用二进制做的OS并无二致；
+3、现在是使用汇编代码来做的这个OS，而汇编翻译之后就是之前抄的那个二进制的OS；
+4、因此现在的生成顺序是：
+	ipl.nas->ipl.lst和ipl.bin
+	ipl.bin->helloos.img
+5、ipl.nas：汇编代码
+     ipl.lst：二进制与汇编一一对应
+     ipl.bin：ipl.nas翻译后的二进制
+     helloos.img：操作系统镜像文件
